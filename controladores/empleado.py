@@ -71,6 +71,7 @@ def add_empleado():
     sta   = request.json["status"]
     edad  = request.json["edad"]
     fot   = request.json["foto"]
+    dir   = request.json["dirreccion"]
 
 
     if request.method=='POST':
@@ -79,7 +80,8 @@ def add_empleado():
         "password": passw,
         "status": sta,
         "edad": edad,
-        "foto":fot
+        "foto":fot,
+        "dirreccion": dir
         }
 
 
