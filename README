@@ -1,0 +1,15 @@
+# Tupperware Flask app
+
+Preferred use `pyenv` to manage the python versions
+
+## Create a virtual environment
+```
+python3 -m venv .venv   
+```
+
+## Install dependencies:
+```
+pip install Flask
+pip install flask_pymongo
+pip install flask_cors
+```
