@@ -320,7 +320,7 @@ def obtener_PorId(producto_id):
         if resultado:
             # Incluye solo los campos deseados en la respuesta
             datos_respuesta = {
-                "_id": resultado.get("_id"),
+                "_id": str(resultado.get("_id")),
                 "foto": resultado.get("foto"),
                 "cantidadExistente": resultado.get("cantidadExistente"),
                 "nombre": resultado.get("nombre"),

@@ -12,8 +12,24 @@ app = create_app()
 @carrito.route('/carrito/<string:id>', methods=['GET'])
 def obtener_carrito_por_id(id):
     query = {'_id': ObjectId(id)}
+    project = {"_id": 0}
     try:
-        resultado = mongo.db.carrito.find_one(query)
+        resultado = mongo.db.carrito.find_one(query, project)
+        print(resultado)
+
+        if resultado: 
+            return jsonify(resultado)
+        else:
+            return jsonify({"mensaje": "carrito no encontrado"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@carrito.route('/carrito', methods=['POST'])
+def crear_carrito(id):
+    query = {'_id': ObjectId(id)}
+    project = {"_id": 0}
+    try:
+        resultado = mongo.db.carrito.find_one(query, project)
         print(resultado)
 
         if resultado: 
