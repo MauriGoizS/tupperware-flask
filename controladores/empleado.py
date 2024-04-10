@@ -12,15 +12,15 @@ app = create_app()
 
 
 @emple.route('/empleado/get_all', methods=['GET'])
-def listar_usua():
-    data = mongo.db.usuario.find({})
+def listar_empleado():
+    data = mongo.db.empleado.find({})
     r = []
-    for usuario in data:
-        usuario['_id']=str(usuario['_id'])
-        r.append(usuario)
+    for empleado in data:
+        empleado['_id']=str(empleado['_id'])
+        r.append(empleado)
     return r
 
-#http://127.0.0.1:4000/usuario/get_all
+#http://127.0.0.1:4000/empleado/get_all
 
 
 
@@ -71,7 +71,7 @@ def add_empleado():
     sta   = request.json["status"]
     edad  = request.json["edad"]
     fot   = request.json["foto"]
-    dir   = request.json["dirreccion"]
+    dir   = request.json["direccion"]
 
 
     if request.method=='POST':
@@ -81,7 +81,7 @@ def add_empleado():
         "status": sta,
         "edad": edad,
         "foto":fot,
-        "dirreccion": dir
+        "direccion": dir
         }
 
 
