@@ -60,3 +60,21 @@ def listar_carrito():
     return r
 
 #http://127.0.0.1:4000/carrito/get_all
+
+
+@carrito.route('/carrito/eliminar/<string:id>', methods=['DELETE'])
+def eliminar(id):
+        try:
+            resultado = mongo.db.carrito.delete_one({'_id':ObjectId(id)})
+            if resultado:
+                # Si la consulta es exitosa, devuelve los datos en formato JSON
+                return jsonify({"mensaje": "documento eliminado"})
+            else:
+                # Si no se encuentra el documento, devuelve un mensaje adecuado
+                return jsonify({"mensaje": "Documento no encontrado"})
+        except Exception as e:
+            # Manejo de la excepción, puedes personalizar el mensaje de error según tus necesidades
+            return jsonify({"error": str(e)}), 500
+        
+        
+#http://127.0.0.1:4000/carrito/eliminar/<string:id>

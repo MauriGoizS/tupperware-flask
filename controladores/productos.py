@@ -1,3 +1,247 @@
+from datetime import datetime
+from bson.objectid import ObjectId
+from flask import request
+from app import create_app
+from mongo import mongo
+from flask import Blueprint, jsonify
+from bson.json_util import dumps
+
+prod = Blueprint("products", __name__)
+app = create_app()
+
+@prod.route('/productos/get_all', methods=['GET'])
+def listar_prod():
+    data = mongo.db.productos.find({})#, {"_id":0}
+    r = []
+    for producto in data:
+        producto['_id']= str(producto['_id'])
+        r.append(producto)
+    return r
+
+#http://127.0.0.1:4000/productos/get_all
+
+@prod.route('/productos/porNombre/<string:nombre>', methods=['GET'])
+def obtener_PorNombre(nombre):
+    query = {'nombre': {'$eq': nombre}}
+    sort = [("nombre", 1)]
+    project = {"_id": 0, "nombre": 1, "foto": 1, "clasificacion": 1 ,"precio":1}
+
+    try:
+        resultado = mongo.db.productos.find(query, project).sort(sort)
+        count_resultado = mongo.db.productos.count_documents(query)
+
+        if count_resultado > 0:
+            return dumps(resultado) 
+        else:
+            return jsonify({"message": "No se encontraron resultados con el nombre"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# #http://127.0.0.1:4000/productos/porNombre/<string:nombre>
+    
+from bson import ObjectId  # Importa ObjectId del módulo bson
+
+@prod.route('/productos/porId/<string:producto_id>', methods=['GET'])  # Cambia la ruta y el nombre del parámetro
+def obtener_PorId(producto_id):
+    try:
+        # Convierte el ID de cadena a ObjectId
+        query = {'_id': ObjectId(producto_id)}
+        resultado = mongo.db.productos.find_one(query)
+
+        if resultado:
+            # Incluye solo los campos deseados en la respuesta
+            datos_respuesta = {
+                "_id": str(resultado.get("_id")),
+                "foto": resultado.get("foto"),
+                "cantidadExistente": resultado.get("cantidadExistente"),
+                "nombre": resultado.get("nombre"),
+                "precio": resultado.get("precio"),
+                "dimensiones": resultado.get("dimensiones")
+            }
+            return jsonify(datos_respuesta)
+        else:
+            return jsonify({"message": "No se encontraron resultados con el ID"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+
+
+
+@prod.route('/productos/porID/<string:id>' , methods = ['GET'])
+def obtener_PorID(id):
+    query={'_id': ObjectId(id)}
+    project ={"_id":0}
+    try:
+        resultado = mongo.db.productos.find_one(query, project)
+        if resultado: 
+            return jsonify(resultado)
+        else:
+            return jsonify({"mensaje": "documento no encontrado"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# http://127.0.0.1:4000/productos/porID/<string:id>
+
+
+
+
+
+@prod.route('/productos/nuevoProd', methods=['POST'])
+def add_producto():
+    #from flask import request
+    n=request.json["nombre"]
+    cla=request.json["clasificacion"]["nomClasificacion"]
+    des=request.json["clasificacion"]["Descripcion"]
+
+
+    mod=request.json["modelo"]
+    cos=request.json["costo"]
+    pre= cos * 1.20
+
+    al=request.json["dimensiones"]["altura"]
+    an=request.json["dimensiones"]["ancho"]
+    lar=request.json["dimensiones"]["largo"]
+    cap=request.json["dimensiones"]["capacidad"]
+
+    num=request.json["numeroDePiezas"]
+    col=request.json["color"]
+    fot=request.json["foto"]
+    
+
+
+
+    fechaAdq=request.json["fechaAdquisicion"]
+
+    can=request.json["cantidadExistente"]
+    sta=request.json["status"]
+    cui=request.json["ciudadanosRecomendados"]
+    mat=request.json["materialFabricacion"]
+    pas=request.json["paisOrigen"]
+    pro=request.json["proveedorId"]
+    mar=request.json["marcaId"]
+    e=request.json["estado"]
+    if request.method=='POST':
+        product={
+        "nombre": n,
+        "clasificacion":{"nomClasificacion":cla,"Descripcion":des},
+        "modelo":mod,
+        "costo":cos,
+        "precio":pre,
+        "dimensiones":{"altura":al,"ancho":an, "largo":lar, "capacidad":cap},
+        "numeroDePiezas":num,
+        "color":col,
+        "foto":fot,
+
+
+        'fechaAdquisicion':fechaAdq,
+
+
+
+        "cantidadExistente":can,
+        "status":sta,
+        "ciudadanosRecomendados":cui,
+        "materialFabricacion":mat,
+        "paisOrigen":pas,
+        "proveedorId":pro,
+        "marcaId":[mar, mar, mar],
+        "estado": e,
+        }
+
+    try:
+        resultado = mongo.db.productos.insert_one(product)
+        if resultado:
+        # Si la consulta es exitosa, devuelve los datos en formato JSON
+            return jsonify({"mensaje": "Documento insertado"})
+        else:
+        # Si no se pudo insertar el documento, devuelve un mensaje
+            return jsonify({"mensaje": "Documento no insertado"}), 404
+    except Exception as e:
+        # Manejo de la excepción, puedes personalizar el mensaje de error según tus
+        #necesidades
+        return jsonify({"error": str(e)}), 500
+    
+
+#http://127.0.0.1:4000/productos/nuevoProd
+
+
+
+
+@prod.route('/productos/eliminar/<string:id>', methods=['DELETE'])
+def eliminar(id):
+        try:
+            resultado = mongo.db.productos.delete_one({'_id':ObjectId(id)})
+            if resultado:
+                # Si la consulta es exitosa, devuelve los datos en formato JSON
+                return jsonify({"mensaje": "documento eliminado"})
+            else:
+                # Si no se encuentra el documento, devuelve un mensaje adecuado
+                return jsonify({"mensaje": "Documento no encontrado"})
+        except Exception as e:
+            # Manejo de la excepción, puedes personalizar el mensaje de error según tus necesidades
+            return jsonify({"error": str(e)}), 500
+        
+        
+#http://127.0.0.1:4000/productos/eliminar/<string:id>
+
+
+        
+
+@prod.route('/productos/actualizar/<string:id>', methods=['PUT'])
+def actualizar_producto(id):
+    campos_actualizar = request.json
+    
+    try:
+        if campos_actualizar:
+            resultado = mongo.db.productos.update_one({'_id': ObjectId(id)}, {"$set": campos_actualizar})
+            if resultado.modified_count > 0:
+                if 'costo' in campos_actualizar:
+                    nuevo_costo = float(campos_actualizar['costo'])  # Validar que el costo sea un número
+                    nuevo_precio = nuevo_costo * 1.20  # Aumento del 20% al costo
+                    mongo.db.productos.update_one({'_id': ObjectId(id)}, {"$set": {"precio": nuevo_precio}})
+                return jsonify({"mensaje": "Documento No Actualiza quien sabe por que :("})
+            else:
+                return jsonify({"mensaje": "Documento no encontrado"}), 404
+        else:
+            return jsonify({"mensaje": "No se proporcionaron datos para actualizar"}), 400
+    
+    except ValueError:
+        return jsonify({"error": "El costo proporcionado no es un número válido"}), 400
+    except Exception as e:
+        return jsonify({"error": f"Error al actualizar el producto: {str(e)}"}), 500
+
+
+# http://127.0.0.1:4000/productos/actualizar/<string:id>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ====================================================================
+
 # # from app import create_app
 # # from mongo import mongo
 # # from flask import Blueprint , jsonify
@@ -266,157 +510,6 @@
 #     except Exception as e:
 #         return  list({"error": str(e)}) ,500
 
-from datetime import datetime
-from bson.objectid import ObjectId
-from flask import request
-from app import create_app
-from mongo import mongo
-from flask import Blueprint, jsonify
-from bson.json_util import dumps
-
-prod = Blueprint("products", __name__)
-app = create_app()
-
-@prod.route('/productos/get_all', methods=['GET'])
-def listar_prod():
-    data = mongo.db.productos.find({})#, {"_id":0}
-    r = []
-    for producto in data:
-        producto['_id']= str(producto['_id'])
-        r.append(producto)
-    return r
-
-#http://127.0.0.1:4000/productos/get_all
-
-@prod.route('/productos/porNombre/<string:nombre>', methods=['GET'])
-def obtener_PorNombre(nombre):
-    query = {'nombre': {'$eq': nombre}}
-    sort = [("nombre", 1)]
-    project = {"_id": 0, "nombre": 1, "foto": 1, "clasificacion": 1 ,"precio":1}
-
-    try:
-        resultado = mongo.db.productos.find(query, project).sort(sort)
-        count_resultado = mongo.db.productos.count_documents(query)
-
-        if count_resultado > 0:
-            return dumps(resultado) 
-        else:
-            return jsonify({"message": "No se encontraron resultados con el nombre"}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-# #http://127.0.0.1:4000/productos/porNombre/<string:nombre>
-    
-from bson import ObjectId  # Importa ObjectId del módulo bson
-
-@prod.route('/productos/porId/<string:producto_id>', methods=['GET'])  # Cambia la ruta y el nombre del parámetro
-def obtener_PorId(producto_id):
-    try:
-        # Convierte el ID de cadena a ObjectId
-        query = {'_id': ObjectId(producto_id)}
-        resultado = mongo.db.productos.find_one(query)
-
-        if resultado:
-            # Incluye solo los campos deseados en la respuesta
-            datos_respuesta = {
-                "_id": str(resultado.get("_id")),
-                "foto": resultado.get("foto"),
-                "cantidadExistente": resultado.get("cantidadExistente"),
-                "nombre": resultado.get("nombre"),
-                "precio": resultado.get("precio"),
-                "dimensiones": resultado.get("dimensiones")
-            }
-            return jsonify(datos_respuesta)
-        else:
-            return jsonify({"message": "No se encontraron resultados con el ID"}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
-
-
-
-
-@prod.route('/productos/porID/<string:id>' , methods = ['GET'])
-def obtener_PorID(id):
-    query={'_id': ObjectId(id)}
-    project ={"_id":0}
-    try:
-        resultado = mongo.db.productos.find_one(query, project)
-        if resultado: 
-            return jsonify(resultado)
-        else:
-            return jsonify({"mensaje": "documento no encontrado"}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# http://127.0.0.1:4000/productos/porID/<string:id>
-
-
-
-
-
-@prod.route('/productos/nuevoProd', methods=['POST'])
-def add_producto():
-    #from flask import request
-    n=request.json["nombre"]
-    cla=request.json["clasificacion"]["nomClasificacion"]
-    des=request.json["clasificacion"]["Descripcion"]
-
-
-    mod=request.json["modelo"]
-    cos=request.json["costo"]
-    pre= cos * 1.20
-
-    al=request.json["dimensiones"]["altura"]
-    an=request.json["dimensiones"]["ancho"]
-    lar=request.json["dimensiones"]["largo"]
-    cap=request.json["dimensiones"]["capacidad"]
-
-    num=request.json["numeroDePiezas"]
-    col=request.json["color"]
-    fot=request.json["foto"]
-    
-
-
-
-    fechaAdq=request.json["fechaAdquisicion"]
-
-    can=request.json["cantidadExistente"]
-    sta=request.json["status"]
-    cui=request.json["ciudadanosRecomendados"]
-    mat=request.json["materialFabricacion"]
-    pas=request.json["paisOrigen"]
-    pro=request.json["proveedorId"]
-    mar=request.json["marcaId"]
-    e=request.json["estado"]
-    if request.method=='POST':
-        product={
-        "nombre": n,
-        "clasificacion":{"nomClasificacion":cla,"Descripcion":des},
-        "modelo":mod,
-        "costo":cos,
-        "precio":pre,
-        "dimensiones":{"altura":al,"ancho":an, "largo":lar, "capacidad":cap},
-        "numeroDePiezas":num,
-        "color":col,
-        "foto":fot,
-
-
-        'fechaAdquisicion':fechaAdq,
-
-
-
-        "cantidadExistente":can,
-        "status":sta,
-        "ciudadanosRecomendados":cui,
-        "materialFabricacion":mat,
-        "paisOrigen":pas,
-        "proveedorId":pro,
-        "marcaId":[mar, mar, mar],
-        "estado": e,
-        }
-
 
 
     # product1={"nombProd":"lampara de mano",
@@ -433,43 +526,6 @@ def add_producto():
     # "fechaCreación": datetime.now(),
     # "prov_id":1,
     # "marca_id":1}
-
-
-    try:
-        resultado = mongo.db.productos.insert_one(product)
-        if resultado:
-        # Si la consulta es exitosa, devuelve los datos en formato JSON
-            return jsonify({"mensaje": "Documento insertado"})
-        else:
-        # Si no se pudo insertar el documento, devuelve un mensaje
-            return jsonify({"mensaje": "Documento no insertado"}), 404
-    except Exception as e:
-        # Manejo de la excepción, puedes personalizar el mensaje de error según tus
-        #necesidades
-        return jsonify({"error": str(e)}), 500
-    
-
-#http://127.0.0.1:4000/productos/nuevoProd
-
-
-
-
-@prod.route('/productos/eliminar/<string:id>', methods=['DELETE'])
-def eliminar(id):
-        try:
-            resultado = mongo.db.productos.delete_one({'_id':ObjectId(id)})
-            if resultado:
-                # Si la consulta es exitosa, devuelve los datos en formato JSON
-                return jsonify({"mensaje": "documento eliminado"})
-            else:
-                # Si no se encuentra el documento, devuelve un mensaje adecuado
-                return jsonify({"mensaje": "Documento no encontrado"})
-        except Exception as e:
-            # Manejo de la excepción, puedes personalizar el mensaje de error según tus necesidades
-            return jsonify({"error": str(e)}), 500
-        
-        
-#http://127.0.0.1:4000/productos/eliminar/<string:id>
 
 
 
@@ -539,30 +595,3 @@ def eliminar(id):
 
 
 # # http://127.0.0.1:4000/productos/actualizar/<string:id>
-        
-
-@prod.route('/productos/actualizar/<string:id>', methods=['PUT'])
-def actualizar_producto(id):
-    campos_actualizar = request.json
-    
-    try:
-        if campos_actualizar:
-            resultado = mongo.db.productos.update_one({'_id': ObjectId(id)}, {"$set": campos_actualizar})
-            if resultado.modified_count > 0:
-                if 'costo' in campos_actualizar:
-                    nuevo_costo = float(campos_actualizar['costo'])  # Validar que el costo sea un número
-                    nuevo_precio = nuevo_costo * 1.20  # Aumento del 20% al costo
-                    mongo.db.productos.update_one({'_id': ObjectId(id)}, {"$set": {"precio": nuevo_precio}})
-                return jsonify({"mensaje": "Documento No Actualiza quien sabe por que :("})
-            else:
-                return jsonify({"mensaje": "Documento no encontrado"}), 404
-        else:
-            return jsonify({"mensaje": "No se proporcionaron datos para actualizar"}), 400
-    
-    except ValueError:
-        return jsonify({"error": "El costo proporcionado no es un número válido"}), 400
-    except Exception as e:
-        return jsonify({"error": f"Error al actualizar el producto: {str(e)}"}), 500
-
-
-# http://127.0.0.1:4000/productos/actualizar/<string:id>
