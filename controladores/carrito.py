@@ -47,3 +47,16 @@ def crear_carrito():
         # Manejo de la excepción, puedes personalizar el mensaje de error según tus
         #necesidades
         return jsonify({"error": str(e)}), 500
+    
+
+
+@carrito.route('/carrito/get_all', methods=['GET'])
+def listar_carrito():
+    data = mongo.db.carrito.find({})#, {"_id":0}
+    r = []
+    for carrito in data:
+        carrito['_id']= str(carrito['_id'])
+        r.append(carrito)
+    return r
+
+#http://127.0.0.1:4000/carrito/get_all
