@@ -94,8 +94,6 @@ def add_producto():
     n=request.json["nombre"]
     cla=request.json["clasificacion"]["nomClasificacion"]
     des=request.json["clasificacion"]["Descripcion"]
-
-
     mod=request.json["modelo"]
     cos=request.json["costo"]
     pre= cos * 1.20
@@ -108,20 +106,16 @@ def add_producto():
     num=request.json["numeroDePiezas"]
     col=request.json["color"]
     fot=request.json["foto"]
-    
-
-
-
     fechaAdq=request.json["fechaAdquisicion"]
-
     can=request.json["cantidadExistente"]
     sta=request.json["status"]
     cui=request.json["ciudadanosRecomendados"]
     mat=request.json["materialFabricacion"]
     pas=request.json["paisOrigen"]
-    pro=request.json["proveedorId"]
+    pro=request.json["proveedor"]
     mar=request.json["marcaId"]
     e=request.json["estado"]
+    
     if request.method=='POST':
         product={
         "nombre": n,
@@ -133,18 +127,13 @@ def add_producto():
         "numeroDePiezas":num,
         "color":col,
         "foto":fot,
-
-
         'fechaAdquisicion':fechaAdq,
-
-
-
         "cantidadExistente":can,
         "status":sta,
         "ciudadanosRecomendados":cui,
         "materialFabricacion":mat,
         "paisOrigen":pas,
-        "proveedorId":pro,
+        "proveedor":pro,
         "marcaId":[mar, mar, mar],
         "estado": e,
         }
